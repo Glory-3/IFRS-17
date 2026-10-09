@@ -48,6 +48,10 @@ function validar(tablas::Dict{String,DataFrame}, cfg::Configuracion; previas::Ve
         tablas[t.nombre][!, c.nombre] = [v === missing ? missing : uppercase(v) for v in col]
     end
 
+    for t in ("contratos", "primas", "portafolios", "supuestos_siniestralidad")
+        nrow(tablas[t]) == 0 && err(t, 0, "la tabla está vacía")
+    end
+
     completa(r) = all(x -> x !== missing, r)   # fila sin vacíos en las columnas indicadas
 
     # 2. Portafolios

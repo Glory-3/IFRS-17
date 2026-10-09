@@ -11,9 +11,11 @@ Motor de medición IFRS 17. Organización por capas, siguiendo el orden de la no
 module IFRS17
 
 using Dates
+using Printf
 using CSV
 using DataFrames
 using TOML
+using XLSX
 
 include("nucleo/tipos.jl")
 include("nucleo/calendario.jl")
@@ -37,7 +39,7 @@ export Configuracion, Insumos, Incidencia, ResultadoOnerosidad
 export fin_de_mes, rejilla_mensual, fraccion_devengada
 export cargar_configuracion, leer_tablas, construir_insumos, cargar_insumos, validar, hay_errores, resumen_incidencias
 export fecha_reconocimiento, cohorte, supuestos_para, ratio_combinado, clasificar_onerosidad
-export clave_supuesto, prima_por_contrato, test_onerosidad_inicial, formar_grupos, generar_plantillas
-export tabla_onerosidad, tabla_grupos, tabla_clasificacion, tabla_incidencias, ejecutar
+export clave_supuesto, prima_por_contrato, test_onerosidad_inicial, formar_grupos, generar_plantilla, diccionario_datos
+export tabla_onerosidad, tabla_grupos, tabla_clasificacion, tabla_incidencias, tabla_resumen, escribir_resultados, ejecutar
 
 end # module

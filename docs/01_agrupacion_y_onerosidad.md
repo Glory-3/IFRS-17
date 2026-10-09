@@ -66,8 +66,8 @@ En gastos se toma **el conjunto de filas** de la clave más específica que exis
 ## 4. Formación de grupos y persistencia (párr. 24)
 
 Grupo = portafolio × cohorte × clase. Los grupos se fijan en el reconocimiento inicial y **no se
-reevalúan**. Por eso cada corrida escribe `clasificacion_contratos.csv`; en el siguiente corte ese archivo
-se entrega como insumo `clasificacion_previa.csv` y los contratos allí listados conservan su clase, aunque
+reevalúan**. Por eso el Excel de resultados trae la hoja `clasificacion_contratos`; en el siguiente corte se
+copia en la hoja `clasificacion_previa` del Excel de insumos y los contratos allí listados conservan su clase, aunque
 los supuestos hayan cambiado. Solo los contratos nuevos se clasifican con los supuestos vigentes.
 
 Los supuestos del grupo (para la medición posterior) son el promedio ponderado por prima de los conjuntos

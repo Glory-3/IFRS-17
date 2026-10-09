@@ -7,13 +7,13 @@ Cada paso termina con código, pruebas automatizadas y documentación de la meto
 - Modelo de datos propio, centrado en el **contrato** y en **supuestos legibles** por portafolio/cohorte/producto
   (sin tablas de IDs intermedios).
 - El esquema (`src/datos/esquema.jl`) es la fuente única: de él salen la lectura, la validación,
-  las plantillas CSV y el diccionario de datos.
+  la plantilla Excel y el diccionario de datos.
 
 ## Paso 1 — Núcleo ✅
 - Tipos de dominio (`Contrato`, `MovimientoPrima`, `Portafolio`, `SupuestosGrupo`, `GrupoContratos`).
 - Calendario mensual y fracción devengada (diaria o mensual).
-- Configuración TOML: corte, políticas (IACF diferir/gasto, devengo, descuento), umbrales de onerosidad.
-- Lectura CSV tolerante (separador `,` o `;`, decimal `.` o `,`) y validación con reporte por fila.
+- Configuración (hoja `configuracion` del Excel): corte, políticas (IACF diferir/gasto, devengo, descuento), umbrales de onerosidad.
+- Lectura desde un único Excel de insumos (o CSV) y validación con reporte por hoja y fila.
 
 ## Paso 2 — Agrupación y onerosidad inicial ✅
 - Fecha de reconocimiento (párr. 25) y cohorte anual (párr. 22).

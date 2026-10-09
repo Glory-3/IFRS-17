@@ -20,17 +20,19 @@ tabla de movimientos completa.
 
 Detalle en [`docs/00_hoja_de_ruta.md`](docs/00_hoja_de_ruta.md).
 
-## Uso rápido
+## Cómo usarlo
+
+👉 **Lea [`GUIA_DE_USO.md`](GUIA_DE_USO.md)**. En resumen: instale Julia, llene el Excel
+`plantillas/IFRS17_Insumos_PLANTILLA.xlsx` y arrástrelo sobre `EJECUTAR.bat`. Los resultados quedan en
+un Excel en la carpeta `resultados`. Con doble clic en `EJECUTAR.bat` corre el ejemplo
+(`datos/ejemplo/IFRS17_Insumos_ejemplo.xlsx`, datos sintéticos).
+
+Para desarrolladores:
 
 ```bash
-julia --project=. -e 'using Pkg; Pkg.instantiate()'     # una vez
-julia --project=. scripts/ejecutar.jl                    # corre el ejemplo
-julia --project=. scripts/ejecutar.jl ruta/configuracion.toml
 julia --project=. -e 'using Pkg; Pkg.test()'             # pruebas
+julia --project=. scripts/generar_plantillas.jl          # regenera plantilla, ejemplo y diccionario
 ```
-
-Los datos de `datos/ejemplo/` son **sintéticos** (`scripts/generar_datos_ejemplo.jl`).
-Los datos reales van en `datos/privados/` (excluido de git).
 
 ## Estructura
 
@@ -43,26 +45,16 @@ src/
   reportes/              tablas de salida y corrida completa (`ejecutar`)
 test/                    pruebas automatizadas (casos calculados a mano)
 scripts/                 ejecución y generación de datos de ejemplo
-datos/ejemplo/           insumos sintéticos + configuracion.toml
-plantillas/              CSV vacíos + diccionario de datos (generados desde el esquema)
+datos/ejemplo/           Excel de ejemplo con datos sintéticos (y su versión CSV)
+plantillas/              Excel de insumos vacío + diccionario de datos (generados desde el esquema)
+EJECUTAR.bat             ejecutar en Windows (arrastrar el Excel encima)
+GUIA_DE_USO.md           guía paso a paso
 docs/                    hoja de ruta, marco normativo y metodología por módulo
 ```
 
-## Insumos
+## Insumos y resultados
 
-Un CSV por tabla (diccionario completo en [`plantillas/LEEME.md`](plantillas/LEEME.md)):
-
-| Tabla | Contenido |
-|---|---|
-| `contratos` | Una fila por póliza: portafolio, producto, emisión, vigencia |
-| `primas` | Movimientos de prima emitida (emisión, endoso, cancelación) |
-| `portafolios` | Portafolios y su modelo de medición (PAA / GMM) |
-| `supuestos_siniestralidad` | Siniestralidad esperada y RA por portafolio / cohorte / producto |
-| `supuestos_gastos` | Factores de gasto por concepto, clasificados ADQUISICION / MANTENIMIENTO / NO_ATRIBUIBLE |
-| `patron_pagos`, `curvas` | (opcionales) para descuento |
-| `clasificacion_previa` | (opcional) clase de onerosidad ya asignada en cortes anteriores |
-
-## Salidas (paso 2)
-
-`incidencias.csv`, `onerosidad_inicial.csv`, `grupos.csv`, `clasificacion_contratos.csv`
-(esta última se usa como `clasificacion_previa` en el siguiente corte).
+- Insumos: un Excel con una hoja por tabla — diccionario completo en
+  [`plantillas/DICCIONARIO_DE_DATOS.md`](plantillas/DICCIONARIO_DE_DATOS.md).
+- Resultados: `resultados/resultados_<corte>.xlsx` (resumen, onerosidad_inicial, grupos,
+  clasificacion_contratos, incidencias).

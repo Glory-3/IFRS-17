@@ -36,24 +36,63 @@ function tabla_incidencias(inc::Vector{Incidencia})
               fila = [i.fila for i in inc], mensaje = [i.mensaje for i in inc])
 end
 
-"""
-    ejecutar(ruta_configuracion; escribir=true)
+"Número con separador de miles y dos decimales, p. ej. 1,234,567.89"
+function miles(x::Real)
+    ent, dec = split(@sprintf("%.2f", abs(x)), '.')
+    ent = reverse(join(join.(Iterators.partition(reverse(ent), 3)), ","))
+    return (x < 0 ? "-" : "") * ent * "." * dec
+end
 
-Corrida completa de la fase actual: carga y valida insumos, test de onerosidad inicial y formación
-de grupos. Escribe los resultados en `carpeta_salidas` y devuelve un `NamedTuple` con todo.
+"Hoja de resumen con las cifras principales de la corrida."
+function tabla_resumen(cfg::Configuracion, ins, oner, grupos)
+    n_on = count(g -> g.clave.clase == ONEROSO, grupos)
+    filas = [
+        ("Fecha de corte", string(cfg.fecha_corte)),
+        ("Moneda", cfg.moneda),
+        ("Política IACF", cfg.politica_iacf == IACF_DIFERIR ? "DIFERIR" : "GASTO"),
+        ("Contratos leídos", string(length(ins.contratos))),
+        ("Contratos reconocidos al corte", string(sum(length(g.contratos) for g in grupos; init = 0))),
+        ("Grupos de contratos", string(length(grupos))),
+        ("Grupos onerosos", string(n_on)),
+        ("Prima de conjuntos onerosos", miles(sum(r.prima for r in oner if r.clase == ONEROSO; init = 0.0))),
+        ("Pérdida inicial total (componente de pérdida)", miles(sum(r.perdida_inicial for r in oner; init = 0.0))),
+        ("Advertencias en los datos", string(count(i -> i.nivel === :advertencia, ins.incidencias))),
+    ]
+    DataFrame(concepto = first.(filas), valor = last.(filas))
+end
+
+"Escribe el Excel de resultados y devuelve su ruta."
+function escribir_resultados(cfg::Configuracion, ins, oner, grupos, clases)
+    mkpath(cfg.carpeta_salidas)
+    ruta = joinpath(cfg.carpeta_salidas, "resultados_$(cfg.fecha_corte).xlsx")
+    isfile(ruta) && rm(ruta)
+    hojas = ["resumen" => tabla_resumen(cfg, ins, oner, grupos),
+             "onerosidad_inicial" => tabla_onerosidad(oner),
+             "grupos" => tabla_grupos(grupos),
+             "clasificacion_contratos" => tabla_clasificacion(clases, cfg.fecha_corte),
+             "incidencias" => tabla_incidencias(ins.incidencias)]
+    XLSX.openxlsx(ruta, mode = "w") do xf
+        for (k, (nombre, df)) in enumerate(hojas)
+            h = k == 1 ? xf[1] : XLSX.addsheet!(xf, nombre)
+            k == 1 && XLSX.rename!(h, nombre)
+            escribir_tabla!(h, df)
+        end
+    end
+    return ruta
+end
+
 """
-function ejecutar(ruta_configuracion::AbstractString; escribir::Bool = true)
-    cfg = cargar_configuracion(ruta_configuracion)
+    ejecutar(ruta; escribir=true)
+
+Corrida completa. `ruta` es el Excel de insumos (o un `.toml` en el formato avanzado).
+Carga y valida los datos, hace el test de onerosidad inicial y forma los grupos.
+Escribe `resultados/resultados_<corte>.xlsx` y devuelve un `NamedTuple` con todo.
+"""
+function ejecutar(ruta::AbstractString; escribir::Bool = true)
+    cfg = cargar_configuracion(ruta)
     ins = cargar_insumos(cfg)
     oner = test_onerosidad_inicial(ins, cfg)
     grupos, clases = formar_grupos(ins, cfg, oner)
-    if escribir
-        mkpath(cfg.carpeta_salidas)
-        out(n, df) = CSV.write(joinpath(cfg.carpeta_salidas, n), df)
-        out("incidencias.csv", tabla_incidencias(ins.incidencias))
-        out("onerosidad_inicial.csv", tabla_onerosidad(oner))
-        out("grupos.csv", tabla_grupos(grupos))
-        out("clasificacion_contratos.csv", tabla_clasificacion(clases, cfg.fecha_corte))
-    end
-    return (; configuracion = cfg, insumos = ins, onerosidad = oner, grupos, clase_por_contrato = clases)
+    archivo = escribir ? escribir_resultados(cfg, ins, oner, grupos, clases) : ""
+    return (; configuracion = cfg, insumos = ins, onerosidad = oner, grupos, clase_por_contrato = clases, archivo)
 end

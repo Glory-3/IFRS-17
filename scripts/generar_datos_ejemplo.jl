@@ -3,7 +3,7 @@
 using Random, Dates, CSV, DataFrames
 
 n = length(ARGS) >= 1 ? parse(Int, ARGS[1]) : 2000
-carpeta = length(ARGS) >= 2 ? ARGS[2] : joinpath(@__DIR__, "..", "datos", "ejemplo")
+carpeta = length(ARGS) >= 2 ? ARGS[2] : joinpath(@__DIR__, "..", "datos", "ejemplo", "csv")
 mkpath(carpeta)
 rng = MersenneTwister(2024)
 

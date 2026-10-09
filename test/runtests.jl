@@ -140,7 +140,7 @@ end
         patron = DataFrame(portafolio_id = ["AUT", "AUT"], mes_desarrollo = [0, 1], proporcion = [0.5, 0.4])
         ruta = escribir_caso(dir; c..., contratos, siniestralidad = sin, extra = Dict("patron_pagos" => patron))
         cfg = cargar_configuracion(ruta)
-        tablas, inc = leer_tablas(cfg.carpeta_datos)
+        tablas, inc = leer_tablas(cfg.origen)
         append!(inc, validar(tablas, cfg; previas = inc))
         msgs = [i.mensaje for i in inc if i.nivel === :error]
         @test any(contains("duplicado"), msgs)
@@ -157,6 +157,26 @@ end
         m2 = [i.mensaje for i in inc2]
         @test any(contains("10/01/2024"), m2)
         @test any(contains("falta la columna obligatoria 'tipo_movimiento'"), m2)
+    end
+end
+
+@testset "Excel de insumos (flujo normal de uso)" begin
+    mktempdir() do dir
+        c = caso_base()
+        datos = Dict("contratos" => c.contratos, "primas" => c.primas, "portafolios" => c.portafolios,
+                     "supuestos_siniestralidad" => c.siniestralidad, "supuestos_gastos" => c.gastos)
+        ruta = generar_plantilla(joinpath(dir, "insumos.xlsx"); datos, parametros = Dict("fecha_corte" => Date(2024, 12, 31)))
+        r = ejecutar(ruta)
+        @test isempty(r.insumos.incidencias)
+        @test Set(string(g.clave) for g in r.grupos) ==
+              Set(["AUT-2024-SIN_RIESGO_SIGNIFICATIVO", "SOAT-2023-ONEROSO", "SOAT-2024-ONEROSO"])
+        @test isfile(r.archivo) && dirname(r.archivo) == joinpath(dir, "resultados")
+        # La plantilla vacía se puede leer y reporta lo que falta
+        vacia = generar_plantilla(joinpath(dir, "vacia.xlsx"))
+        @test_throws ErrorException cargar_insumos(cargar_configuracion(vacia))
+        # Política GASTO desde la hoja configuracion
+        r2 = ejecutar(generar_plantilla(joinpath(dir, "g.xlsx"); datos, parametros = Dict("politica_iacf" => "GASTO")); escribir = false)
+        @test r2.configuracion.politica_iacf == IACF_GASTO
     end
 end
 

@@ -84,31 +84,107 @@ const ESQUEMA = Tabla[
 tabla_esquema(nombre::AbstractString) = only(filter(t -> t.nombre == nombre, ESQUEMA))
 
 """
-    generar_plantillas(carpeta)
+    diccionario_datos() -> String
 
-Escribe un CSV vacío (solo encabezados) por tabla y un `LEEME.md` con el diccionario de datos.
+Diccionario de datos en Markdown, generado desde el esquema.
 """
-function generar_plantillas(carpeta::AbstractString)
-    mkpath(carpeta)
-    io_doc = IOBuffer()
-    println(io_doc, "# Diccionario de datos de insumos\n")
-    println(io_doc, "Generado automáticamente desde `src/datos/esquema.jl`. Un archivo CSV por tabla, ",
-        "codificación UTF-8, fechas `aaaa-mm-dd`, tasas y factores como fracción.\n")
+function diccionario_datos()
+    io = IOBuffer()
+    println(io, "# Diccionario de datos\n")
+    println(io, "Generado automáticamente desde `src/datos/esquema.jl`. Cada tabla es una hoja del Excel de ",
+        "insumos (fila 1 = encabezados exactamente como aquí). Fechas como fecha de Excel o texto `aaaa-mm-dd`; ",
+        "tasas y factores como fracción (0.12 = 12%).\n")
     for t in ESQUEMA
-        open(joinpath(carpeta, t.nombre * ".csv"), "w") do io
-            println(io, join((c.nombre for c in t.columnas), ","))
-        end
-        println(io_doc, "## `", t.nombre, ".csv`", t.obligatoria ? "" : " *(opcional)*", "\n")
-        println(io_doc, t.descripcion, "\n")
-        println(io_doc, "| Columna | Tipo | Obligatoria | Descripción | Valores |")
-        println(io_doc, "|---|---|---|---|---|")
+        println(io, "## Hoja `", t.nombre, "`", t.obligatoria ? "" : " *(opcional)*", "\n")
+        println(io, t.descripcion, "\n")
+        println(io, "| Columna | Tipo | Obligatoria | Descripción | Valores |")
+        println(io, "|---|---|---|---|---|")
         for c in t.columnas
-            tipo = c.tipo === Date ? "fecha" : c.tipo === Float64 ? "número" : c.tipo === Int ? "entero" : "texto"
-            println(io_doc, "| `", c.nombre, "` | ", tipo, " | ", c.obligatoria ? "sí" : "no", " | ",
+            println(io, "| `", c.nombre, "` | ", _nombre_tipo(c.tipo), " | ", c.obligatoria ? "sí" : "no", " | ",
                 c.descripcion, " | ", join(c.valores, ", "), " |")
         end
-        println(io_doc)
+        println(io)
     end
-    write(joinpath(carpeta, "LEEME.md"), String(take!(io_doc)))
-    return carpeta
+    return String(take!(io))
+end
+
+"""
+    generar_plantilla(ruta; datos=Dict(), parametros=Dict())
+
+Escribe el Excel de insumos: hoja INSTRUCCIONES, hoja `configuracion` y una hoja por tabla del esquema.
+Si se pasan `datos` (nombre de tabla => DataFrame) se llenan esas hojas (se usa para el ejemplo).
+"""
+function generar_plantilla(ruta::AbstractString; datos::AbstractDict = Dict{String,DataFrame}(),
+                           parametros::AbstractDict = Dict{String,Any}())
+    mkpath(dirname(abspath(ruta)))
+    instrucciones = String[
+        "MOTOR IFRS 17 - EXCEL DE INSUMOS",
+        "",
+        "CÓMO USARLO",
+        "1. Llene la hoja 'configuracion' (fecha de corte y políticas).",
+        "2. Llene cada hoja de datos desde la fila 2. NO cambie los nombres de las hojas ni de los encabezados (fila 1).",
+        "3. Guarde el archivo y arrástrelo sobre EJECUTAR.bat (Windows) o ejecute: julia --project=. scripts/ejecutar.jl <archivo.xlsx>",
+        "4. Los resultados quedan en la carpeta 'resultados', junto a este archivo.",
+        "",
+        "REGLAS",
+        "- Fechas: formato fecha de Excel (o texto aaaa-mm-dd).",
+        "- Tasas, factores y porcentajes: como fracción (0.12 = 12%), o con formato % de Excel.",
+        "- Montos: número sin símbolos. Devoluciones y cancelaciones en negativo.",
+        "- Hojas marcadas (opcional) pueden quedar solo con encabezados.",
+        "",
+        "HOJAS Y COLUMNAS",
+    ]
+    for t in ESQUEMA
+        push!(instrucciones, "")
+        push!(instrucciones, uppercase(t.nombre) * (t.obligatoria ? "" : "  (opcional)") * " - " * t.descripcion)
+        for c in t.columnas
+            push!(instrucciones, string("   ", rpad(c.nombre, 26), rpad(_nombre_tipo(c.tipo), 18),
+                c.obligatoria ? "obligatoria   " : "opcional      ", c.descripcion,
+                isempty(c.valores) ? "" : "  [" * join(c.valores, " / ") * "]"))
+        end
+    end
+    isfile(ruta) && rm(ruta)
+    XLSX.openxlsx(ruta, mode = "w") do xf
+        hoja = xf[1]
+        XLSX.rename!(hoja, "INSTRUCCIONES")
+        for (i, l) in enumerate(instrucciones)
+            hoja[i, 1] = l
+        end
+        cfg = XLSX.addsheet!(xf, "configuracion")
+        cfg[1, 1], cfg[1, 2], cfg[1, 3] = "parametro", "valor", "descripcion"
+        for (i, (k, v, d)) in enumerate(PARAMETROS)
+            cfg[i + 1, 1], cfg[i + 1, 2], cfg[i + 1, 3] = k, get(parametros, k, v), d
+        end
+        for t in ESQUEMA
+            h = XLSX.addsheet!(xf, t.nombre)
+            df = get(datos, t.nombre, nothing)
+            escribir_tabla!(h, df === nothing ? DataFrame([c.nombre => Any[] for c in t.columnas]) :
+                               select(df, intersect([c.nombre for c in t.columnas], names(df))))
+        end
+    end
+    return ruta
+end
+
+"Escribe un DataFrame en una hoja (encabezados en negrilla en la fila 1). Las celdas `missing` quedan vacías."
+function escribir_tabla!(hoja, df::DataFrame)
+    n = nrow(df)
+    for (j, nombre) in enumerate(names(df))
+        hoja[1, j] = nombre
+        col = df[!, nombre]
+        for i in eachindex(col)
+            v = col[i]
+            (v === missing || v === nothing) && continue
+            hoja[i + 1, j] = v isa AbstractString ? String(v) : v
+        end
+        XLSX.setColumnWidth(hoja, j; width = max(12, length(nombre) + 2))
+        n == 0 && continue
+        T = nonmissingtype(eltype(col))
+        rango = XLSX.CellRange(XLSX.CellRef(2, j), XLSX.CellRef(n + 1, j))
+        if T <: Date
+            XLSX.setFormat(hoja, rango; format = "yyyy-mm-dd")
+        elseif T <: AbstractFloat
+            XLSX.setFormat(hoja, rango; format = "#,##0.00##")
+        end
+    end
+    isempty(names(df)) || XLSX.setFont(hoja, XLSX.CellRange(XLSX.CellRef(1, 1), XLSX.CellRef(1, ncol(df))); bold = true)
 end

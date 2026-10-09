@@ -1,19 +1,20 @@
-# Configuración de la corrida de ejemplo. Las rutas relativas son respecto a este archivo.
+# Formato avanzado (CSV + TOML). Para el uso normal basta con el Excel de insumos.
+# Las rutas relativas son respecto a este archivo.
 
 [corrida]
-fecha_corte = 2024-12-31          # debe ser fin de mes
+fecha_corte = 2024-12-31
 moneda = "COP"
 
 [datos]
-carpeta = "."                     # carpeta con los CSV de insumos
-carpeta_salidas = "../../salidas/ejemplo"
-separador_decimal = "."           # "," si los CSV vienen de Excel en español (con ";" como separador)
+carpeta = "csv"                   # carpeta con un CSV por tabla
+carpeta_salidas = "resultados"
+separador_decimal = "."           # "," si los CSV vienen de Excel en español
 
 [politicas]
-iacf = "DIFERIR"                  # DIFERIR (amortizar con el devengo) o GASTO (al emitir, párr. 59(a))
+iacf = "DIFERIR"                  # DIFERIR o GASTO
 devengo = "DIARIO"                # DIARIO o MENSUAL
-descontar_lrc = false             # componente financiero del LRC PAA (párr. 56)
+descontar_lrc = false
 
 [onerosidad]
-umbral_oneroso = 1.0                       # ratio combinado > 1.0  -> ONEROSO
-umbral_sin_riesgo_significativo = 0.90     # ratio <= 0.90 -> SIN_RIESGO_SIGNIFICATIVO; entre ambos -> RESTANTE
+umbral_oneroso = 1.0
+umbral_sin_riesgo_significativo = 0.90

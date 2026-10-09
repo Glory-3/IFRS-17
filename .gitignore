@@ -3,3 +3,4 @@ salidas/
 datos/privados/
 *.jl.cov
 *.jl.mem
+resultados/
