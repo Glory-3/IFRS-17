@@ -1,0 +1,19 @@
+# Configuración de la corrida de ejemplo. Las rutas relativas son respecto a este archivo.
+
+[corrida]
+fecha_corte = 2024-12-31          # debe ser fin de mes
+moneda = "COP"
+
+[datos]
+carpeta = "."                     # carpeta con los CSV de insumos
+carpeta_salidas = "../../salidas/ejemplo"
+separador_decimal = "."           # "," si los CSV vienen de Excel en español (con ";" como separador)
+
+[politicas]
+iacf = "DIFERIR"                  # DIFERIR (amortizar con el devengo) o GASTO (al emitir, párr. 59(a))
+devengo = "DIARIO"                # DIARIO o MENSUAL
+descontar_lrc = false             # componente financiero del LRC PAA (párr. 56)
+
+[onerosidad]
+umbral_oneroso = 1.0                       # ratio combinado > 1.0  -> ONEROSO
+umbral_sin_riesgo_significativo = 0.90     # ratio <= 0.90 -> SIN_RIESGO_SIGNIFICATIVO; entre ambos -> RESTANTE

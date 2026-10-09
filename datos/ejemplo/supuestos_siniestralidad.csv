@@ -1,0 +1,8 @@
+portafolio_id,cohorte,producto,siniestralidad_esperada,ajuste_riesgo_pct
+AUTOS,0,,0.6,0.05
+HOGAR,0,,0.35,0.05
+SOAT,0,,0.8,0.06
+SOAT,2024,,0.7,0.06
+CUMPLIMIENTO,0,,0.25,0.08
+CUMPLIMIENTO,0,CUMPL_ESTATAL,0.55,0.08
+VIDA_DEUDORES,0,,0.4,0.07

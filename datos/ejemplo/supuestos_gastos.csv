@@ -1,0 +1,15 @@
+portafolio_id,cohorte,producto,concepto,clasificacion,factor
+AUTOS,0,,Comisiones,ADQUISICION,0.15
+AUTOS,0,,IVA_comisiones,ADQUISICION,0.03
+AUTOS,0,,Administracion,MANTENIMIENTO,0.09
+AUTOS,0,,Asistencias,MANTENIMIENTO,0.03
+AUTOS,0,,Gastos_generales,NO_ATRIBUIBLE,0.03
+HOGAR,0,,Comisiones,ADQUISICION,0.15
+HOGAR,0,,Administracion,MANTENIMIENTO,0.1
+SOAT,0,,Comisiones,ADQUISICION,0.05
+SOAT,0,,Contribuciones,MANTENIMIENTO,0.06
+SOAT,0,,Administracion,MANTENIMIENTO,0.06
+CUMPLIMIENTO,0,,Comisiones,ADQUISICION,0.2
+CUMPLIMIENTO,0,,Administracion,MANTENIMIENTO,0.1
+VIDA_DEUDORES,0,,Comisiones,ADQUISICION,0.25
+VIDA_DEUDORES,0,,Administracion,MANTENIMIENTO,0.08

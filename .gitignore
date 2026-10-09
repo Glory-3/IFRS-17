@@ -1,0 +1,5 @@
+Manifest.toml
+salidas/
+datos/privados/
+*.jl.cov
+*.jl.mem

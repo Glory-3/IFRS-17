@@ -1,0 +1,6 @@
+portafolio_id,descripcion,modelo_medicion,curva_id
+AUTOS,Automóviles,PAA,YC_COP
+HOGAR,Hogar,PAA,YC_COP
+SOAT,Seguro obligatorio de tránsito,PAA,YC_COP
+CUMPLIMIENTO,Cumplimiento,PAA,YC_COP
+VIDA_DEUDORES,Vida deudores,GMM,YC_COP
